@@ -517,6 +517,7 @@
             const legend = [];
             const xAxisData = selectedCompanies.size > 0 ? 
                 financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [];
+            const isMobile = window.innerWidth <= 768;
 
             selectedCompanies.forEach(code => {
                 const company = financialData.companies[code];
@@ -526,12 +527,12 @@
                     name: `${company.company_name}-营业收入增长率`,
                     type: 'line',
                     data: growth,
-                    symbol: 'circle',              // 改为实心圆
+                    symbol: 'circle',
                     symbolSize: 8,
                     showSymbol: true,
-                    showAllSymbol: true,           // 显示所有点
+                    showAllSymbol: true,
                     connectNulls: false,
-                    endLabel: {                    // 添加终点标签
+                    endLabel: {
                         show: true,
                         formatter: '{a}'
                     },
@@ -557,7 +558,7 @@
                 xAxis: {
                     type: 'category',
                     data: xAxisData,
-                    boundaryGap: false,            // 设置为 false
+                    boundaryGap: false,
                     axisLabel: {
                         rotate: 45,
                         fontSize: isMobile ? 10 : 12,
