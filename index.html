@@ -438,7 +438,7 @@
                 yAxis: {
                     type: 'value',
                     name: yAxisName,
-                    nameGap: isMobile ? 15 : 30,
+                    nameGap: isMobile ? 25 : 30,    // 增加手机端的 nameGap
                     nameLocation: 'end',
                     nameRotate: 0,
                     scale: false,
@@ -470,7 +470,7 @@
                     },
                     nameTextStyle: {
                         fontSize: isMobile ? 10 : 12,
-                        padding: [0, 0, 0, 0],
+                        padding: [0, 0, 5, 0],      // 添加底部内边距
                         align: 'right',
                         verticalAlign: 'top'
                     }
@@ -511,10 +511,12 @@
             charts.revenueAmount.setOption(option, true);
         }
 
-        // 添加新的 updateRevenueGrowthChart 函数
+        // 修改所有折线图的更新函数，以 updateRevenueGrowthChart 为例：
         function updateRevenueGrowthChart() {
             const series = [];
             const legend = [];
+            const xAxisData = selectedCompanies.size > 0 ? 
+                financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [];
 
             selectedCompanies.forEach(code => {
                 const company = financialData.companies[code];
@@ -524,11 +526,15 @@
                     name: `${company.company_name}-营业收入增长率`,
                     type: 'line',
                     data: growth,
-                    symbol: 'emptyCircle',
+                    symbol: 'circle',              // 改为实心圆
                     symbolSize: 8,
                     showSymbol: true,
-                    showAllSymbol: true,
+                    showAllSymbol: true,           // 显示所有点
                     connectNulls: false,
+                    endLabel: {                    // 添加终点标签
+                        show: true,
+                        formatter: '{a}'
+                    },
                     lineStyle: {
                         width: 2
                     },
@@ -544,11 +550,21 @@
                 ...getCommonChartOptions(
                     '营业收入增长率分析',
                     legend,
-                    selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    xAxisData,
                     '增长率（%）',
                     '{value}%'
                 ),
+                xAxis: {
+                    type: 'category',
+                    data: xAxisData,
+                    boundaryGap: false,            // 设置为 false
+                    axisLabel: {
+                        rotate: 45,
+                        fontSize: isMobile ? 10 : 12,
+                        interval: 0,
+                        margin: 8
+                    }
+                },
                 series: series
             };
 
