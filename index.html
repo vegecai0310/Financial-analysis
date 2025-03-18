@@ -29,11 +29,31 @@
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 4px;
+            text-align: center;
+        }
+        .company-selector h3 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #companyList {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        #companyList span {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+        }
+        #companyList input[type="checkbox"] {
+            margin-right: 5px;
         }
         .chart-container {
             width: 100%;
-            height: 300px;
+            height: 500px;
             margin-bottom: 30px;
+            padding: 0;  /* 移除内边距 */
         }
         @media (max-width: 768px) {
             body {
@@ -44,6 +64,7 @@
             }
             .chart-container {
                 height: 250px;
+                padding: 0;  /* 移除内边距 */
             }
             h1 {
                 font-size: 1.5em;
@@ -69,6 +90,11 @@
         }
         button:hover {
             background-color: #0056b3;
+        }
+        .container h2 {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -355,10 +381,10 @@
                 title: {
                     text: title,
                     textStyle: {
-                        fontSize: isMobile ? 14 : 16
+                        fontSize: isMobile ? 16 : 20  // 增大字体大小
                     },
-                    left: isMobile ? 'center' : 'left',
-                    top: isMobile ? 5 : 'auto'
+                    left: 'center',
+                    top: isMobile ? 5 : 20
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -370,39 +396,65 @@
                 legend: {
                     data: legendData,
                     type: 'scroll',
-                    orient: isMobile ? 'horizontal' : 'vertical',
-                    right: isMobile ? 'auto' : 10,
-                    top: isMobile ? 'bottom' : 'middle',
+                    orient: 'horizontal',
+                    top: isMobile ? 'bottom' : 60,
+                    left: 'center',
                     textStyle: {
                         fontSize: isMobile ? 10 : 12
                     }
                 },
                 grid: {
-                    left: '3%',
-                    right: isMobile ? '3%' : '15%',
-                    top: isMobile ? '15%' : '10%',
-                    bottom: isMobile ? '20%' : '10%',
+                    left: '7%',
+                    right: '7%',
+                    top: isMobile ? '15%' : '25%',
+                    bottom: '15%',
                     containLabel: true
                 },
                 xAxis: {
                     type: 'category',
                     data: xAxisData,
-                    boundaryGap: false,
+                    boundaryGap: true,
                     axisLabel: {
                         rotate: 45,
                         fontSize: isMobile ? 10 : 12,
-                        interval: isMobile ? 'auto' : 0
+                        interval: 0,
+                        margin: 8
                     }
                 },
                 yAxis: {
                     type: 'value',
                     name: yAxisName,
+                    nameGap: isMobile ? 25 : 30,
+                    scale: false,
+                    min: 0,
                     axisLabel: {
-                        formatter: formatter,
-                        fontSize: isMobile ? 10 : 12
+                        formatter: value => {
+                            // 如果传入的是金额格式化字符串
+                            if (formatter === '{value}亿') {
+                                return Math.round(value / 100000000) + '亿';
+                            }
+                            // 如果是百分比格式
+                            if (formatter === '{value}%') {
+                                return Math.round(value) + '%';  // 百分比也取整
+                            }
+                            // 如果是自定义函数
+                            if (typeof formatter === 'function') {
+                                const result = formatter(value);
+                                // 如果结果包含"亿"，则取整
+                                if (typeof result === 'string' && result.includes('亿')) {
+                                    return Math.round(value / 100000000) + '亿';
+                                }
+                                return result;
+                            }
+                            // 默认返回取整后的值
+                            return Math.round(value);
+                        },
+                        fontSize: isMobile ? 10 : 12,
+                        margin: 8
                     },
                     nameTextStyle: {
-                        fontSize: isMobile ? 10 : 12
+                        fontSize: isMobile ? 10 : 12,
+                        padding: [0, 0, 0, isMobile ? 0 : 20]
                     }
                 }
             };
