@@ -72,6 +72,20 @@
             h2 {
                 font-size: 1.2em;
             }
+            #companyList {
+                display: flex;
+                justify-content: center;
+                flex-wrap: nowrap;  /* 防止换行 */
+                gap: 10px;         /* 减小间距 */
+            }
+            
+            #companyList span {
+                font-size: 12px;   /* 减小字体大小 */
+            }
+            
+            #companyList label {
+                font-size: 12px;   /* 减小字体大小 */
+            }
         }
         select {
             padding: 8px;
@@ -381,10 +395,11 @@
                 title: {
                     text: title,
                     textStyle: {
-                        fontSize: isMobile ? 16 : 20  // 增大字体大小
+                        fontSize: isMobile ? 16 : 20
                     },
                     left: 'center',
-                    top: isMobile ? 5 : 20
+                    top: isMobile ? 0 : 20,  // 手机端标题位置上移
+                    padding: [5, 0, 0, 0]    // 减小标题上边距
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -406,7 +421,7 @@
                 grid: {
                     left: '7%',
                     right: '7%',
-                    top: isMobile ? '15%' : '25%',
+                    top: isMobile ? '18%' : '25%',  // 调整手机端顶部边距
                     bottom: '15%',
                     containLabel: true
                 },
@@ -424,7 +439,8 @@
                 yAxis: {
                     type: 'value',
                     name: yAxisName,
-                    nameGap: isMobile ? 25 : 30,
+                    nameGap: isMobile ? 15 : 30,    // 减小手机端名称间距
+                    nameLocation: 'middle',          // 名称位置居中
                     scale: false,
                     min: 0,
                     axisLabel: {
@@ -454,7 +470,8 @@
                     },
                     nameTextStyle: {
                         fontSize: isMobile ? 10 : 12,
-                        padding: [0, 0, 0, isMobile ? 0 : 20]
+                        padding: [0, 0, 5, 0],      // 调整名称位置
+                        align: 'center'             // 文字居中对齐
                     }
                 }
             };
