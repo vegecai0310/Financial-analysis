@@ -9,37 +9,55 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             background-color: #f5f5f5;
         }
         .container {
-            max-width: 1600px;
+            max-width: 100%;
             margin: 0 auto;
             background-color: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .company-selector {
             margin-bottom: 20px;
-            padding: 15px;
+            padding: 10px;
             background-color: #f8f9fa;
             border-radius: 4px;
         }
         .chart-container {
             width: 100%;
-            height: 400px;
+            height: 300px;
             margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            .container {
+                padding: 10px;
+            }
+            .chart-container {
+                height: 250px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            h2 {
+                font-size: 1.2em;
+            }
         }
         select {
             padding: 8px;
             margin: 5px;
             border-radius: 4px;
             border: 1px solid #ddd;
+            max-width: 100%;
         }
         button {
             padding: 8px 16px;
@@ -51,11 +69,6 @@
         }
         button:hover {
             background-color: #0056b3;
-        }
-        h2 {
-            color: #333;
-            margin-top: 30px;
-            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -278,7 +291,66 @@
             updateCharts();
         }
 
-        // 更新营业收入图表
+        // 在 JavaScript 部分修改图表配置的通用选项
+        function getCommonChartOptions(title, legendData, xAxisData, yAxisName, formatter) {
+            const isMobile = window.innerWidth <= 768;
+            return {
+                title: {
+                    text: title,
+                    textStyle: {
+                        fontSize: isMobile ? 14 : 16
+                    },
+                    left: isMobile ? 'center' : 'left',
+                    top: isMobile ? 5 : 'auto'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    confine: true
+                },
+                legend: {
+                    data: legendData,
+                    type: 'scroll',
+                    orient: isMobile ? 'horizontal' : 'vertical',
+                    right: isMobile ? 'auto' : 10,
+                    top: isMobile ? 'bottom' : 'middle',
+                    textStyle: {
+                        fontSize: isMobile ? 10 : 12
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: isMobile ? '3%' : '15%',
+                    top: isMobile ? '15%' : '10%',
+                    bottom: isMobile ? '20%' : '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: xAxisData,
+                    axisLabel: {
+                        rotate: 45,
+                        fontSize: isMobile ? 10 : 12,
+                        interval: isMobile ? 'auto' : 0
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: yAxisName,
+                    axisLabel: {
+                        formatter: formatter,
+                        fontSize: isMobile ? 10 : 12
+                    },
+                    nameTextStyle: {
+                        fontSize: isMobile ? 10 : 12
+                    }
+                }
+            };
+        }
+
+        // 修改所有图表更新函数，使用通用配置
         function updateRevenueAmountChart() {
             const series = [];
             const legend = [];
@@ -297,37 +369,14 @@
             });
 
             const option = {
-                title: {
-                    text: '营业收入分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '营业收入分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -353,37 +402,14 @@
             });
 
             const option = {
-                title: {
-                    text: '营业收入增长率分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '增长率（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '营业收入增长率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '增长率（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -409,37 +435,14 @@
             });
 
             const option = {
-                title: {
-                    text: '净利润分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '净利润分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -464,37 +467,14 @@
             });
 
             const option = {
-                title: {
-                    text: '净利润增长率分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '增长率（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '净利润增长率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '增长率（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -520,37 +500,14 @@
             });
 
             const option = {
-                title: {
-                    text: '毛利润分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '毛利润分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -575,37 +532,14 @@
             });
 
             const option = {
-                title: {
-                    text: '毛利率分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '毛利率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -631,41 +565,14 @@
             });
 
             const option = {
-                title: {
-                    text: '净利润率分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '净利润率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -691,41 +598,14 @@
             });
 
             const option = {
-                title: {
-                    text: '销售费用分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '销售费用分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -750,41 +630,14 @@
             });
 
             const option = {
-                title: {
-                    text: '销售费用占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '销售费用占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -810,41 +663,14 @@
             });
 
             const option = {
-                title: {
-                    text: '管理费用分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '管理费用分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -869,41 +695,14 @@
             });
 
             const option = {
-                title: {
-                    text: '管理费用占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '管理费用占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -929,41 +728,14 @@
             });
 
             const option = {
-                title: {
-                    text: '研发费用分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '研发费用分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -988,41 +760,14 @@
             });
 
             const option = {
-                title: {
-                    text: '研发费用占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '研发费用占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -1048,37 +793,14 @@
             });
 
             const option = {
-                title: {
-                    text: '资产分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '资产分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -1103,37 +825,14 @@
             });
 
             const option = {
-                title: {
-                    text: '负债分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '负债分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -1158,37 +857,14 @@
             });
 
             const option = {
-                title: {
-                    text: '资产负债率分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%'
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    }
-                },
+                ...getCommonChartOptions(
+                    '资产负债率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -1214,41 +890,14 @@
             });
 
             const option = {
-                title: {
-                    text: '应收账款分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '应收账款分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -1273,41 +922,14 @@
             });
 
             const option = {
-                title: {
-                    text: '应收账款占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '应收账款占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -1333,41 +955,14 @@
             });
             
             const option = {
-                title: {
-                    text: '存货分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '存货分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -1392,41 +987,14 @@
             });
 
             const option = {
-                title: {
-                    text: '存货占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '存货占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -1452,41 +1020,14 @@
             });
 
             const option = {
-                title: {
-                    text: '应付账款分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '应付账款分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -1511,41 +1052,14 @@
             });
 
             const option = {
-                title: {
-                    text: '应付账款占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '应付账款占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -1571,41 +1085,14 @@
             });
 
             const option = {
-                title: {
-                    text: '合同负债分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '金额（元）',
-                    axisLabel: {
-                        formatter: value => (value / 100000000).toFixed(2) + '亿'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '合同负债分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
                 series: series
             };
 
@@ -1630,41 +1117,14 @@
             });
 
             const option = {
-                title: {
-                    text: '合同负债占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '合同负债占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
@@ -1690,41 +1150,14 @@
             });
 
             const option = {
-                title: {
-                    text: '应付账款占比分析'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    }
-                },
-                legend: {
-                    data: legend,
-                    type: 'scroll'
-                },
-                grid: {
-                    right: '10%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: selectedCompanies.size > 0 ? 
-                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
-                    axisLabel: {
-                        rotate: 45
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    name: '占比（%）',
-                    axisLabel: {
-                        formatter: '{value}%'
-                    },
-                    splitLine: {
-                        show: true
-                    }
-                },
+                ...getCommonChartOptions(
+                    '应付账款占比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    '占比（%）',
+                    '{value}%'
+                ),
                 series: series
             };
 
