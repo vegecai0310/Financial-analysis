@@ -82,7 +82,8 @@ def process_financial_data(stock_codes):
                     'LONG_PAYABLE': '长期应付款',
                     'TOTAL_LIABILITIES': '总负债',
                     'SHARE_CAPITAL': '实收资本',
-                    'MINORITY_EQUITY': '少数股东权益'
+                    'MINORITY_EQUITY': '少数股东权益',
+                    'TOTAL_EQUITY': '所有者权益'
                 },
                 'cashflow_yearly': {
                     'SALES_SERVICES': '销售收款',
@@ -493,7 +494,75 @@ def process_financial_data(stock_codes):
                     payables_to_cost_inventory_ratio.append(None)
             
             json_data["companies"][company_code]["balance_sheet"]["metrics"]['应付账款占营业成本与存货比'] = payables_to_cost_inventory_ratio
-    
+        
+        # 计算经营活动现金流量净额增长率
+        if '经营活动现金流量净额' in json_data["companies"][company_code]["cash_flow"]["metrics"]:
+            operating_cash_flow = json_data["companies"][company_code]["cash_flow"]["metrics"]['经营活动现金流量净额']
+            growth_rates = []
+            for i in range(len(operating_cash_flow)):
+                if i > 0 and operating_cash_flow[i] is not None and operating_cash_flow[i-1] is not None and operating_cash_flow[i-1] != 0:
+                    growth_rate = (operating_cash_flow[i] - operating_cash_flow[i-1]) / abs(operating_cash_flow[i-1]) * 100
+                    growth_rates.append(round(growth_rate, 2))
+                else:
+                    growth_rates.append(None)
+            json_data["companies"][company_code]["cash_flow"]["metrics"]['经营活动现金流量净额增长率'] = growth_rates
+
+        # 计算销售现金率（销售收款/营业收入）
+        if '销售收款' in json_data["companies"][company_code]["cash_flow"]["metrics"] and \
+           '营业收入' in json_data["companies"][company_code]["profit_sheet"]["metrics"]:
+            sales_cash = json_data["companies"][company_code]["cash_flow"]["metrics"]['销售收款']
+            revenue = json_data["companies"][company_code]["profit_sheet"]["metrics"]['营业收入']
+            sales_cash_ratio = []
+            for i in range(len(sales_cash)):
+                if sales_cash[i] is not None and revenue[i] is not None and revenue[i] != 0:
+                    ratio = (sales_cash[i] / revenue[i]) * 100
+                    sales_cash_ratio.append(round(ratio, 2))
+                else:
+                    sales_cash_ratio.append(None)
+            json_data["companies"][company_code]["cash_flow"]["metrics"]['销售现金率'] = sales_cash_ratio
+
+        # 计算经营现金收入比（经营活动现金流量净额/营业收入）
+        if '经营活动现金流量净额' in json_data["companies"][company_code]["cash_flow"]["metrics"] and \
+           '营业收入' in json_data["companies"][company_code]["profit_sheet"]["metrics"]:
+            operating_cash_flow = json_data["companies"][company_code]["cash_flow"]["metrics"]['经营活动现金流量净额']
+            revenue = json_data["companies"][company_code]["profit_sheet"]["metrics"]['营业收入']
+            operating_cash_ratio = []
+            for i in range(len(operating_cash_flow)):
+                if operating_cash_flow[i] is not None and revenue[i] is not None and revenue[i] != 0:
+                    ratio = (operating_cash_flow[i] / revenue[i]) * 100
+                    operating_cash_ratio.append(round(ratio, 2))
+                else:
+                    operating_cash_ratio.append(None)
+            json_data["companies"][company_code]["cash_flow"]["metrics"]['经营现金收入比'] = operating_cash_ratio
+
+        # 计算净资产收益率（ROE）
+        if '净利润' in json_data["companies"][company_code]["profit_sheet"]["metrics"] and \
+           '所有者权益' in json_data["companies"][company_code]["balance_sheet"]["metrics"]:
+            net_profit = json_data["companies"][company_code]["profit_sheet"]["metrics"]['净利润']
+            equity = json_data["companies"][company_code]["balance_sheet"]["metrics"]['所有者权益']
+            roe = []
+            for i in range(len(net_profit)):
+                if net_profit[i] is not None and equity[i] is not None and equity[i] != 0:
+                    ratio = (net_profit[i] / equity[i]) * 100
+                    roe.append(round(ratio, 2))
+                else:
+                    roe.append(None)
+            json_data["companies"][company_code]["profit_sheet"]["metrics"]['净资产收益率'] = roe
+
+        # 计算总资产收益率（ROA）
+        if '净利润' in json_data["companies"][company_code]["profit_sheet"]["metrics"] and \
+           '总资产' in json_data["companies"][company_code]["balance_sheet"]["metrics"]:
+            net_profit = json_data["companies"][company_code]["profit_sheet"]["metrics"]['净利润']
+            total_assets = json_data["companies"][company_code]["balance_sheet"]["metrics"]['总资产']
+            roa = []
+            for i in range(len(net_profit)):
+                if net_profit[i] is not None and total_assets[i] is not None and total_assets[i] != 0:
+                    ratio = (net_profit[i] / total_assets[i]) * 100
+                    roa.append(round(ratio, 2))
+                else:
+                    roa.append(None)
+            json_data["companies"][company_code]["profit_sheet"]["metrics"]['总资产收益率'] = roa
+
     # 保存JSON文件
     merged_json_path = 'data/merged_financial_data.json'
     with open(merged_json_path, 'w', encoding='utf-8') as f:

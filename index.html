@@ -113,6 +113,25 @@
         <div id="payablesAnalysisChart" class="chart-container"></div>
         <div id="contractLiabilityAmountChart" class="chart-container"></div>
         <div id="contractLiabilityRatioChart" class="chart-container"></div>
+
+        <h2>现金流分析</h2>
+        <div id="salesCollectionChart" class="chart-container"></div>
+        <div id="salesCollectionGrowthChart" class="chart-container"></div>
+        <div id="procurementExpenseChart" class="chart-container"></div>
+        <div id="laborExpenseChart" class="chart-container"></div>
+        <div id="operatingCashFlowChart" class="chart-container"></div>
+        <div id="operatingCashFlowGrowthChart" class="chart-container"></div>
+        <div id="investmentCashFlowChart" class="chart-container"></div>
+        <div id="financingCashInflowChart" class="chart-container"></div>
+        <div id="financingCashOutflowChart" class="chart-container"></div>
+        <div id="financingCashFlowChart" class="chart-container"></div>
+        <div id="cashIncreaseChart" class="chart-container"></div>
+
+        <h2>收益率分析</h2>
+        <div id="roeChart" class="chart-container"></div>
+        <div id="roaChart" class="chart-container"></div>
+        <div id="salesCashRatioChart" class="chart-container"></div>
+        <div id="operatingCashRatioChart" class="chart-container"></div>
     </div>
 
     <script>
@@ -178,6 +197,25 @@
                 charts.contractLiabilityAmount = echarts.init(document.getElementById('contractLiabilityAmountChart'));
                 charts.contractLiabilityRatio = echarts.init(document.getElementById('contractLiabilityRatioChart'));
                 charts.payablesAnalysis = echarts.init(document.getElementById('payablesAnalysisChart'));
+
+                // 初始化现金流分析图表
+                charts.salesCollection = echarts.init(document.getElementById('salesCollectionChart'));
+                charts.salesCollectionGrowth = echarts.init(document.getElementById('salesCollectionGrowthChart'));
+                charts.procurementExpense = echarts.init(document.getElementById('procurementExpenseChart'));
+                charts.laborExpense = echarts.init(document.getElementById('laborExpenseChart'));
+                charts.operatingCashFlow = echarts.init(document.getElementById('operatingCashFlowChart'));
+                charts.operatingCashFlowGrowth = echarts.init(document.getElementById('operatingCashFlowGrowthChart'));
+                charts.investmentCashFlow = echarts.init(document.getElementById('investmentCashFlowChart'));
+                charts.financingCashInflow = echarts.init(document.getElementById('financingCashInflowChart'));
+                charts.financingCashOutflow = echarts.init(document.getElementById('financingCashOutflowChart'));
+                charts.financingCashFlow = echarts.init(document.getElementById('financingCashFlowChart'));
+                charts.cashIncrease = echarts.init(document.getElementById('cashIncreaseChart'));
+
+                // 初始化收益率分析图表
+                charts.roe = echarts.init(document.getElementById('roeChart'));
+                charts.roa = echarts.init(document.getElementById('roaChart'));
+                charts.salesCashRatio = echarts.init(document.getElementById('salesCashRatioChart'));
+                charts.operatingCashRatio = echarts.init(document.getElementById('operatingCashRatioChart'));
             } catch (error) {
                 console.error('Error initializing charts:', error);
                 alert('初始化图表失败：' + error.message);
@@ -234,6 +272,25 @@
                 updateContractLiabilityAmountChart();
                 updateContractLiabilityRatioChart();
                 updatePayablesAnalysisChart();
+
+                // 更新现金流分析图表
+                updateSalesCollectionChart();
+                updateSalesCollectionGrowthChart();
+                updateProcurementExpenseChart();
+                updateLaborExpenseChart();
+                updateOperatingCashFlowChart();
+                updateOperatingCashFlowGrowthChart();
+                updateInvestmentCashFlowChart();
+                updateFinancingCashInflowChart();
+                updateFinancingCashOutflowChart();
+                updateFinancingCashFlowChart();
+                updateCashIncreaseChart();
+
+                // 更新收益率分析图表
+                updateRoeChart();
+                updateRoaChart();
+                updateSalesCashRatioChart();
+                updateOperatingCashRatioChart();
             } catch (error) {
                 console.error('Error updating charts:', error);
                 alert('更新图表失败：' + error.message);
@@ -330,6 +387,7 @@
                 xAxis: {
                     type: 'category',
                     data: xAxisData,
+                    boundaryGap: false,
                     axisLabel: {
                         rotate: 45,
                         fontSize: isMobile ? 10 : 12,
@@ -395,7 +453,18 @@
                 series.push({
                     name: `${company.company_name}-营业收入增长率`,
                     type: 'line',
-                    data: growth
+                    data: growth,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-营业收入增长率`);
@@ -460,7 +529,18 @@
                 series.push({
                     name: `${company.company_name}-净利润增长率`,
                     type: 'line',
-                    data: netProfitGrowth
+                    data: netProfitGrowth,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-净利润增长率`);
@@ -525,7 +605,18 @@
                 series.push({
                     name: `${company.company_name}-毛利率`,
                     type: 'line',
-                    data: grossMargin
+                    data: grossMargin,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-毛利率`);
@@ -558,7 +649,18 @@
                 series.push({
                     name: `${company.company_name}-净利润率`,
                     type: 'line',
-                    data: netMargin
+                    data: netMargin,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-净利润率`);
@@ -623,7 +725,18 @@
                 series.push({
                     name: `${company.company_name}-销售费用占比`,
                     type: 'line',
-                    data: salesExpenseRatio
+                    data: salesExpenseRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-销售费用占比`);
@@ -688,7 +801,18 @@
                 series.push({
                     name: `${company.company_name}-管理费用占比`,
                     type: 'line',
-                    data: adminExpenseRatio
+                    data: adminExpenseRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-管理费用占比`);
@@ -753,7 +877,18 @@
                 series.push({
                     name: `${company.company_name}-研发费用占比`,
                     type: 'line',
-                    data: rdExpenseRatio
+                    data: rdExpenseRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-研发费用占比`);
@@ -850,7 +985,18 @@
                 series.push({
                     name: `${company.company_name}-资产负债率`,
                     type: 'line',
-                    data: debtToAssetsRatio
+                    data: debtToAssetsRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-资产负债率`);
@@ -915,7 +1061,18 @@
                 series.push({
                     name: `${company.company_name}-占营业收入比`,
                     type: 'line',
-                    data: receiveRatio
+                    data: receiveRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-占营业收入比`);
@@ -980,7 +1137,18 @@
                 series.push({
                     name: `${company.company_name}-占营业成本比`,
                     type: 'line',
-                    data: inventoryRatio
+                    data: inventoryRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-占营业成本比`);
@@ -1045,7 +1213,18 @@
                 series.push({
                     name: `${company.company_name}-占营业成本比`,
                     type: 'line',
-                    data: payableRatio
+                    data: payableRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-占营业成本比`);
@@ -1110,7 +1289,18 @@
                 series.push({
                     name: `${company.company_name}-占营业收入比`,
                     type: 'line',
-                    data: liabilityRatio
+                    data: liabilityRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-占营业收入比`);
@@ -1143,7 +1333,18 @@
                 series.push({
                     name: `${company.company_name}-应付账款占营业成本及存货比`,
                     type: 'line',
-                    data: ratio
+                    data: ratio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
                 });
 
                 legend.push(`${company.company_name}-应付账款占营业成本及存货比`);
@@ -1162,6 +1363,553 @@
             };
 
             charts.payablesAnalysis.setOption(option, true);
+        }
+
+        // 更新现金流分析图表的函数
+        function updateSalesCollectionChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const salesCollection = company.cash_flow.metrics['销售收款'];
+
+                series.push({
+                    name: `${company.company_name}-销售收款`,
+                    type: 'bar',
+                    data: salesCollection
+                });
+
+                legend.push(`${company.company_name}-销售收款`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '销售收款分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.salesCollection.setOption(option, true);
+        }
+
+        function updateSalesCollectionGrowthChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const growth = company.cash_flow.metrics['销售收款增长率'];
+
+                series.push({
+                    name: `${company.company_name}-销售收款增长率`,
+                    type: 'line',
+                    data: growth,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
+                });
+
+                legend.push(`${company.company_name}-销售收款增长率`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '销售收款增长率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '增长率（%）',
+                    '{value}%'
+                ),
+                series: series
+            };
+
+            charts.salesCollectionGrowth.setOption(option, true);
+        }
+
+        function updateProcurementExpenseChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const procurement = company.cash_flow.metrics['采购支出'];
+
+                series.push({
+                    name: `${company.company_name}-采购支出`,
+                    type: 'bar',
+                    data: procurement
+                });
+
+                legend.push(`${company.company_name}-采购支出`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '采购支出分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.procurementExpense.setOption(option, true);
+        }
+
+        function updateLaborExpenseChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const labor = company.cash_flow.metrics['人工支出'];
+
+                series.push({
+                    name: `${company.company_name}-人工支出`,
+                    type: 'bar',
+                    data: labor
+                });
+
+                legend.push(`${company.company_name}-人工支出`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '人工支出分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.laborExpense.setOption(option, true);
+        }
+
+        function updateOperatingCashFlowChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const operatingCashFlow = company.cash_flow.metrics['经营活动现金流量净额'];
+
+                series.push({
+                    name: `${company.company_name}-经营活动现金流量净额`,
+                    type: 'bar',
+                    data: operatingCashFlow
+                });
+
+                legend.push(`${company.company_name}-经营活动现金流量净额`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '经营活动现金流量净额分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.operatingCashFlow.setOption(option, true);
+        }
+
+        function updateOperatingCashFlowGrowthChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const growth = company.cash_flow.metrics['经营活动现金流量净额增长率'];
+
+                series.push({
+                    name: `${company.company_name}-经营活动现金流量净额增长率`,
+                    type: 'line',
+                    data: growth,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
+                });
+
+                legend.push(`${company.company_name}-经营活动现金流量净额增长率`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '经营活动现金流量净额增长率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '增长率（%）',
+                    '{value}%'
+                ),
+                series: series
+            };
+
+            charts.operatingCashFlowGrowth.setOption(option, true);
+        }
+
+        function updateInvestmentCashFlowChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const investmentCashFlow = company.cash_flow.metrics['投资活动现金流量净额'];
+
+                series.push({
+                    name: `${company.company_name}-投资活动现金流量净额`,
+                    type: 'bar',
+                    data: investmentCashFlow
+                });
+
+                legend.push(`${company.company_name}-投资活动现金流量净额`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '投资活动现金流量净额分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.investmentCashFlow.setOption(option, true);
+        }
+
+        function updateFinancingCashInflowChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const financingInflow = company.cash_flow.metrics['筹资活动现金流入总额'];
+
+                series.push({
+                    name: `${company.company_name}-筹资活动现金流入`,
+                    type: 'bar',
+                    data: financingInflow
+                });
+
+                legend.push(`${company.company_name}-筹资活动现金流入`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '筹资活动现金流入分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.financingCashInflow.setOption(option, true);
+        }
+
+        function updateFinancingCashOutflowChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const financingOutflow = company.cash_flow.metrics['筹资活动现金流出总额'];
+
+                series.push({
+                    name: `${company.company_name}-筹资活动现金流出`,
+                    type: 'bar',
+                    data: financingOutflow
+                });
+
+                legend.push(`${company.company_name}-筹资活动现金流出`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '筹资活动现金流出分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.financingCashOutflow.setOption(option, true);
+        }
+
+        function updateFinancingCashFlowChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const financingCashFlow = company.cash_flow.metrics['筹资活动现金流量净额'];
+
+                series.push({
+                    name: `${company.company_name}-筹资活动现金流量净额`,
+                    type: 'bar',
+                    data: financingCashFlow
+                });
+
+                legend.push(`${company.company_name}-筹资活动现金流量净额`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '筹资活动现金流量净额分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.financingCashFlow.setOption(option, true);
+        }
+
+        function updateCashIncreaseChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const cashIncrease = company.cash_flow.metrics['现金增加'];
+
+                series.push({
+                    name: `${company.company_name}-现金增加`,
+                    type: 'bar',
+                    data: cashIncrease
+                });
+
+                legend.push(`${company.company_name}-现金增加`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '现金增加分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '金额（元）',
+                    value => (value / 100000000).toFixed(2) + '亿'
+                ),
+                series: series
+            };
+
+            charts.cashIncrease.setOption(option, true);
+        }
+
+        function updateRoeChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const roe = company.profit_sheet.metrics['净资产收益率'];
+
+                series.push({
+                    name: `${company.company_name}-净资产收益率`,
+                    type: 'line',
+                    data: roe,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
+                });
+
+                legend.push(`${company.company_name}-净资产收益率`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '净资产收益率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '收益率（%）',
+                    '{value}%'
+                ),
+                series: series
+            };
+
+            charts.roe.setOption(option, true);
+        }
+
+        function updateRoaChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const roa = company.profit_sheet.metrics['总资产收益率'];
+
+                series.push({
+                    name: `${company.company_name}-总资产收益率`,
+                    type: 'line',
+                    data: roa,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
+                });
+
+                legend.push(`${company.company_name}-总资产收益率`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '总资产收益率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    '收益率（%）',
+                    '{value}%'
+                ),
+                series: series
+            };
+
+            charts.roa.setOption(option, true);
+        }
+
+        function updateSalesCashRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const salesCashRatio = company.cash_flow.metrics['销售现金率'];
+
+                series.push({
+                    name: `${company.company_name}-销售现金率`,
+                    type: 'line',
+                    data: salesCashRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
+                });
+
+                legend.push(`${company.company_name}-销售现金率`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '销售现金率分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '比率（%）',
+                    '{value}%'
+                ),
+                series: series
+            };
+
+            charts.salesCashRatio.setOption(option, true);
+        }
+
+        function updateOperatingCashRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const operatingCashRatio = company.cash_flow.metrics['经营现金收入比'];
+
+                series.push({
+                    name: `${company.company_name}-经营现金收入比`,
+                    type: 'line',
+                    data: operatingCashRatio,
+                    symbol: 'emptyCircle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    showAllSymbol: true,
+                    connectNulls: false,
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        borderWidth: 2
+                    }
+                });
+
+                legend.push(`${company.company_name}-经营现金收入比`);
+            });
+
+            const option = {
+                ...getCommonChartOptions(
+                    '经营现金收入比分析',
+                    legend,
+                    selectedCompanies.size > 0 ? 
+                        financialData.companies[Array.from(selectedCompanies)[0]].cash_flow.years : [],
+                    '比率（%）',
+                    '{value}%'
+                ),
+                series: series
+            };
+
+            charts.operatingCashRatio.setOption(option, true);
         }
 
         // 页面加载完成后执行
