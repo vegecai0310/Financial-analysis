@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上市公司财务分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .company-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>上市公司财务分析</h1>
+        </div>
+        
+        <div class="company-selector">
+            <h3>选择要分析的公司</h3>
+            <div id="companyList"></div>
+        </div>
+
+        <h2>利润水平分析</h2>
+        <div id="revenueAmountChart" class="chart-container"></div>
+        <div id="revenueGrowthChart" class="chart-container"></div>
+        <div id="profitAmountChart" class="chart-container"></div>
+        <div id="profitGrowthChart" class="chart-container"></div>
+        <div id="grossProfitAmountChart" class="chart-container"></div>
+        <div id="grossProfitMarginChart" class="chart-container"></div>
+        <div id="netProfitMarginChart" class="chart-container"></div>
+
+        <h2>费用结构分析</h2>
+        <div id="expenseAmountChart" class="chart-container"></div>
+        <div id="expenseRatioChart" class="chart-container"></div>
+        <div id="adminExpenseAmountChart" class="chart-container"></div>
+        <div id="adminExpenseRatioChart" class="chart-container"></div>
+        <div id="rdExpenseAmountChart" class="chart-container"></div>
+        <div id="rdExpenseRatioChart" class="chart-container"></div>
+
+        <h2>资产负债结构分析</h2>
+        <div id="assetsChart" class="chart-container"></div>
+        <div id="liabilitiesChart" class="chart-container"></div>
+        <div id="debtToAssetsRatioChart" class="chart-container"></div>
+        <div id="accountsReceivableAmountChart" class="chart-container"></div>
+        <div id="accountsReceivableRatioChart" class="chart-container"></div>
+        <div id="inventoryAmountChart" class="chart-container"></div>
+        <div id="inventoryRatioChart" class="chart-container"></div>
+        <div id="accountsPayableAmountChart" class="chart-container"></div>
+        <div id="accountsPayableRatioChart" class="chart-container"></div>
+        <div id="payablesAnalysisChart" class="chart-container"></div>
+        <div id="contractLiabilityAmountChart" class="chart-container"></div>
+        <div id="contractLiabilityRatioChart" class="chart-container"></div>
+    </div>
+
+    <script>
+        let financialData = null;
+        let selectedCompanies = new Set();
+        let charts = {};
+
+        // 加载JSON数据
+        async function loadData() {
+            try {
+                const response = await fetch('data/merged_financial_data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                financialData = await response.json();
+                
+                // 确保先初始化图表，再初始化选择器
+                await initCharts();
+                initializeCompanySelector();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('加载数据失败：' + error.message);
+            }
+        }
+
+        // 初始化所有图表
+        async function initCharts() {
+            // 确保DOM元素已经加载
+            await new Promise(resolve => {
+                if (document.readyState === 'complete') {
+                    resolve();
+                } else {
+                    window.addEventListener('load', resolve);
+                }
+            });
+
+            // 初始化每个图表
+            try {
+                charts.revenueAmount = echarts.init(document.getElementById('revenueAmountChart'));
+                charts.revenueGrowth = echarts.init(document.getElementById('revenueGrowthChart'));
+                charts.profitAmount = echarts.init(document.getElementById('profitAmountChart'));
+                charts.profitGrowth = echarts.init(document.getElementById('profitGrowthChart'));
+                charts.grossProfitAmount = echarts.init(document.getElementById('grossProfitAmountChart'));
+                charts.grossProfitMargin = echarts.init(document.getElementById('grossProfitMarginChart'));
+                charts.netProfitMargin = echarts.init(document.getElementById('netProfitMarginChart'));
+
+                charts.expenseAmount = echarts.init(document.getElementById('expenseAmountChart'));
+                charts.expenseRatio = echarts.init(document.getElementById('expenseRatioChart'));
+                charts.adminExpenseAmount = echarts.init(document.getElementById('adminExpenseAmountChart'));
+                charts.adminExpenseRatio = echarts.init(document.getElementById('adminExpenseRatioChart'));
+                charts.rdExpenseAmount = echarts.init(document.getElementById('rdExpenseAmountChart'));
+                charts.rdExpenseRatio = echarts.init(document.getElementById('rdExpenseRatioChart'));
+
+                charts.assets = echarts.init(document.getElementById('assetsChart'));
+                charts.liabilities = echarts.init(document.getElementById('liabilitiesChart'));
+                charts.debtToAssetsRatio = echarts.init(document.getElementById('debtToAssetsRatioChart'));
+                charts.accountsReceivableAmount = echarts.init(document.getElementById('accountsReceivableAmountChart'));
+                charts.accountsReceivableRatio = echarts.init(document.getElementById('accountsReceivableRatioChart'));
+                charts.inventoryAmount = echarts.init(document.getElementById('inventoryAmountChart'));
+                charts.inventoryRatio = echarts.init(document.getElementById('inventoryRatioChart'));
+                charts.accountsPayableAmount = echarts.init(document.getElementById('accountsPayableAmountChart'));
+                charts.accountsPayableRatio = echarts.init(document.getElementById('accountsPayableRatioChart'));
+                charts.contractLiabilityAmount = echarts.init(document.getElementById('contractLiabilityAmountChart'));
+                charts.contractLiabilityRatio = echarts.init(document.getElementById('contractLiabilityRatioChart'));
+                charts.payablesAnalysis = echarts.init(document.getElementById('payablesAnalysisChart'));
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+                alert('初始化图表失败：' + error.message);
+            }
+        }
+
+        // 更新所有图表
+        function updateCharts() {
+            // 检查图表是否都已初始化
+            if (!charts.revenueAmount || !charts.revenueGrowth || !charts.profitAmount || 
+                !charts.profitGrowth || !charts.grossProfitAmount || !charts.grossProfitMargin || !charts.netProfitMargin ||
+                !charts.expenseAmount || !charts.expenseRatio || !charts.adminExpenseAmount || !charts.adminExpenseRatio ||
+                !charts.rdExpenseAmount || !charts.rdExpenseRatio ||
+                !charts.assets || !charts.liabilities || !charts.debtToAssetsRatio ||
+                !charts.accountsReceivableAmount || !charts.accountsReceivableRatio ||
+                !charts.inventoryAmount || !charts.inventoryRatio ||
+                !charts.accountsPayableAmount || !charts.accountsPayableRatio ||
+                !charts.contractLiabilityAmount || !charts.contractLiabilityRatio ||
+                !charts.payablesAnalysis) {
+                console.error('Charts not initialized yet');
+                return;
+            }
+
+            if (selectedCompanies.size === 0) {
+                alert('请至少选择一家公司进行分析');
+                return;
+            }
+
+            try {
+                updateRevenueAmountChart();
+                updateRevenueGrowthChart();
+                updateProfitAmountChart();
+                updateProfitGrowthChart();
+                updateGrossProfitAmountChart();
+                updateGrossProfitMarginChart();
+                updateNetProfitMarginChart();
+
+                updateExpenseAmountChart();
+                updateExpenseRatioChart();
+                updateAdminExpenseAmountChart();
+                updateAdminExpenseRatioChart();
+                updateRdExpenseAmountChart();
+                updateRdExpenseRatioChart();
+
+                updateAssetsChart();
+                updateLiabilitiesChart();
+                updateDebtToAssetsRatioChart();
+                updateAccountsReceivableAmountChart();
+                updateAccountsReceivableRatioChart();
+                updateInventoryAmountChart();
+                updateInventoryRatioChart();
+                updateAccountsPayableAmountChart();
+                updateAccountsPayableRatioChart();
+                updateContractLiabilityAmountChart();
+                updateContractLiabilityRatioChart();
+                updatePayablesAnalysisChart();
+            } catch (error) {
+                console.error('Error updating charts:', error);
+                alert('更新图表失败：' + error.message);
+            }
+        }
+
+        // 初始化公司选择器
+        function initializeCompanySelector() {
+            const companyList = document.getElementById('companyList');
+            companyList.innerHTML = '';
+
+            // 获取正帆科技的代码
+            const defaultCompanyCode = '688596';  // 正帆科技的代码
+            const zhengfanCode = '688596';  // 正帆科技
+            const zhichunCode = '603690';   // 至纯科技
+            
+            // 按指定顺序创建公司选择器
+            const orderedCodes = [zhengfanCode, zhichunCode];
+            
+            orderedCodes.forEach(code => {
+                const data = financialData.companies[code];
+                if (!data) return;  // 如果没有该公司数据则跳过
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = code;
+                checkbox.value = code;
+                // 默认选中正帆科技
+                if (code === defaultCompanyCode) {
+                    checkbox.checked = true;
+                    selectedCompanies.add(code);
+                }
+                checkbox.onchange = () => {
+                    if (checkbox.checked) {
+                        selectedCompanies.add(code);
+                    } else {
+                        selectedCompanies.delete(code);
+                    }
+                    updateCharts();  // 当选择变化时更新图表
+                };
+
+                const label = document.createElement('label');
+                label.htmlFor = code;
+                label.textContent = `${data.company_name}（${code}）`;
+
+                const container = document.createElement('span');
+                container.style.marginRight = '20px';
+                container.appendChild(checkbox);
+                container.appendChild(label);
+
+                companyList.appendChild(container);
+            });
+            
+            // 初始化完成后立即更新图表
+            updateCharts();
+        }
+
+        // 更新营业收入图表
+        function updateRevenueAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const revenue = company.profit_sheet.metrics['营业收入'];
+
+                series.push({
+                    name: `${company.company_name}-营业收入`,
+                    type: 'bar',
+                    data: revenue
+                });
+
+                legend.push(`${company.company_name}-营业收入`);
+            });
+
+            const option = {
+                title: {
+                    text: '营业收入分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    }
+                },
+                series: series
+            };
+
+            charts.revenueAmount.setOption(option, true);
+        }
+
+        // 添加新的 updateRevenueGrowthChart 函数
+        function updateRevenueGrowthChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const growth = company.profit_sheet.metrics['营业收入增长率'];
+
+                series.push({
+                    name: `${company.company_name}-营业收入增长率`,
+                    type: 'line',
+                    data: growth
+                });
+
+                legend.push(`${company.company_name}-营业收入增长率`);
+            });
+
+            const option = {
+                title: {
+                    text: '营业收入增长率分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '增长率（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: series
+            };
+
+            charts.revenueGrowth.setOption(option, true);
+        }
+
+        // 更新利润图表
+        function updateProfitAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const netProfit = company.profit_sheet.metrics['净利润'];
+
+                series.push({
+                    name: `${company.company_name}-净利润`,
+                    type: 'bar',
+                    data: netProfit
+                });
+
+                legend.push(`${company.company_name}-净利润`);
+            });
+
+            const option = {
+                title: {
+                    text: '净利润分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    }
+                },
+                series: series
+            };
+
+            charts.profitAmount.setOption(option, true);
+        }
+
+        function updateProfitGrowthChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const netProfitGrowth = company.profit_sheet.metrics['净利润增长率'];
+
+                series.push({
+                    name: `${company.company_name}-净利润增长率`,
+                    type: 'line',
+                    data: netProfitGrowth
+                });
+
+                legend.push(`${company.company_name}-净利润增长率`);
+            });
+
+            const option = {
+                title: {
+                    text: '净利润增长率分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '增长率（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: series
+            };
+
+            charts.profitGrowth.setOption(option, true);
+        }
+
+        // 更新利润率图表
+        function updateGrossProfitAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const grossProfit = company.profit_sheet.metrics['毛利润'];
+
+                series.push({
+                    name: `${company.company_name}-毛利润`,
+                    type: 'bar',
+                    data: grossProfit
+                });
+
+                legend.push(`${company.company_name}-毛利润`);
+            });
+
+            const option = {
+                title: {
+                    text: '毛利润分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    }
+                },
+                series: series
+            };
+
+            charts.grossProfitAmount.setOption(option, true);
+        }
+
+        function updateGrossProfitMarginChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const grossMargin = company.profit_sheet.metrics['毛利率'];
+
+                series.push({
+                    name: `${company.company_name}-毛利率`,
+                    type: 'line',
+                    data: grossMargin
+                });
+
+                legend.push(`${company.company_name}-毛利率`);
+            });
+
+            const option = {
+                title: {
+                    text: '毛利率分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: series
+            };
+
+            charts.grossProfitMargin.setOption(option, true);
+        }
+
+        // 更新增长率图表
+        function updateNetProfitMarginChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const netMargin = company.profit_sheet.metrics['净利润率'];
+
+                series.push({
+                    name: `${company.company_name}-净利润率`,
+                    type: 'line',
+                    data: netMargin
+                });
+
+                legend.push(`${company.company_name}-净利润率`);
+            });
+
+            const option = {
+                title: {
+                    text: '净利润率分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.netProfitMargin.setOption(option, true);
+        }
+
+        // 更新费用结构图表
+        function updateExpenseAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const salesExpense = company.profit_sheet.metrics['销售费用'];
+
+                series.push({
+                    name: `${company.company_name}-销售费用`,
+                    type: 'bar',
+                    data: salesExpense
+                });
+
+                legend.push(`${company.company_name}-销售费用`);
+            });
+
+            const option = {
+                title: {
+                    text: '销售费用分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.expenseAmount.setOption(option, true);
+        }
+
+        function updateExpenseRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const salesExpenseRatio = company.profit_sheet.metrics['销售费用占比'];
+
+                series.push({
+                    name: `${company.company_name}-销售费用占比`,
+                    type: 'line',
+                    data: salesExpenseRatio
+                });
+
+                legend.push(`${company.company_name}-销售费用占比`);
+            });
+
+            const option = {
+                title: {
+                    text: '销售费用占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.expenseRatio.setOption(option, true);
+        }
+
+        // 更新管理费用分析图表
+        function updateAdminExpenseAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const adminExpense = company.profit_sheet.metrics['管理费用'];
+
+                series.push({
+                    name: `${company.company_name}-管理费用`,
+                    type: 'bar',
+                    data: adminExpense
+                });
+
+                legend.push(`${company.company_name}-管理费用`);
+            });
+
+            const option = {
+                title: {
+                    text: '管理费用分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.adminExpenseAmount.setOption(option, true);
+        }
+
+        function updateAdminExpenseRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const adminExpenseRatio = company.profit_sheet.metrics['管理费用占比'];
+
+                series.push({
+                    name: `${company.company_name}-管理费用占比`,
+                    type: 'line',
+                    data: adminExpenseRatio
+                });
+
+                legend.push(`${company.company_name}-管理费用占比`);
+            });
+
+            const option = {
+                title: {
+                    text: '管理费用占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.adminExpenseRatio.setOption(option, true);
+        }
+
+        // 更新研发费用分析图表
+        function updateRdExpenseAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const rdExpense = company.profit_sheet.metrics['研发费用'];
+
+                series.push({
+                    name: `${company.company_name}-研发费用`,
+                    type: 'bar',
+                    data: rdExpense
+                });
+
+                legend.push(`${company.company_name}-研发费用`);
+            });
+
+            const option = {
+                title: {
+                    text: '研发费用分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.rdExpenseAmount.setOption(option, true);
+        }
+
+        function updateRdExpenseRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const rdExpenseRatio = company.profit_sheet.metrics['研发费用占比'];
+
+                series.push({
+                    name: `${company.company_name}-研发费用占比`,
+                    type: 'line',
+                    data: rdExpenseRatio
+                });
+
+                legend.push(`${company.company_name}-研发费用占比`);
+            });
+
+            const option = {
+                title: {
+                    text: '研发费用占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].profit_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.rdExpenseRatio.setOption(option, true);
+        }
+
+        // 更新资产负债率图表
+        function updateAssetsChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const totalAssets = company.balance_sheet.metrics['总资产'];
+
+                series.push({
+                    name: `${company.company_name}-总资产`,
+                    type: 'bar',
+                    data: totalAssets
+                });
+
+                legend.push(`${company.company_name}-总资产`);
+            });
+
+            const option = {
+                title: {
+                    text: '资产分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    }
+                },
+                series: series
+            };
+
+            charts.assets.setOption(option, true);
+        }
+
+        function updateLiabilitiesChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const totalLiabilities = company.balance_sheet.metrics['总负债'];
+
+                series.push({
+                    name: `${company.company_name}-总负债`,
+                    type: 'bar',
+                    data: totalLiabilities
+                });
+
+                legend.push(`${company.company_name}-总负债`);
+            });
+
+            const option = {
+                title: {
+                    text: '负债分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    }
+                },
+                series: series
+            };
+
+            charts.liabilities.setOption(option, true);
+        }
+
+        function updateDebtToAssetsRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const debtToAssetsRatio = company.balance_sheet.metrics['资产负债率'];
+
+                series.push({
+                    name: `${company.company_name}-资产负债率`,
+                    type: 'line',
+                    data: debtToAssetsRatio
+                });
+
+                legend.push(`${company.company_name}-资产负债率`);
+            });
+
+            const option = {
+                title: {
+                    text: '资产负债率分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: series
+            };
+
+            charts.debtToAssetsRatio.setOption(option, true);
+        }
+
+        // 更新应收账款分析图表
+        function updateAccountsReceivableAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const accountsReceivable = company.balance_sheet.metrics['应收账款及应收票据'];
+
+                series.push({
+                    name: `${company.company_name}-应收账款及应收票据`,
+                    type: 'bar',
+                    data: accountsReceivable
+                });
+
+                legend.push(`${company.company_name}-应收账款及应收票据`);
+            });
+
+            const option = {
+                title: {
+                    text: '应收账款分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.accountsReceivableAmount.setOption(option, true);
+        }
+
+        function updateAccountsReceivableRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const receiveRatio = company.balance_sheet.metrics['应收账款及应收票据占比'];
+
+                series.push({
+                    name: `${company.company_name}-占营业收入比`,
+                    type: 'line',
+                    data: receiveRatio
+                });
+
+                legend.push(`${company.company_name}-占营业收入比`);
+            });
+
+            const option = {
+                title: {
+                    text: '应收账款占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.accountsReceivableRatio.setOption(option, true);
+        }
+
+        // 更新存货分析图表
+        function updateInventoryAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const inventory = company.balance_sheet.metrics['存货'];
+
+                series.push({
+                    name: `${company.company_name}-存货`,
+                    type: 'bar',
+                    data: inventory
+                });
+
+                legend.push(`${company.company_name}-存货`);
+            });
+            
+            const option = {
+                title: {
+                    text: '存货分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.inventoryAmount.setOption(option, true);
+        }
+
+        function updateInventoryRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const inventoryRatio = company.balance_sheet.metrics['存货占营业成本比'];
+
+                series.push({
+                    name: `${company.company_name}-占营业成本比`,
+                    type: 'line',
+                    data: inventoryRatio
+                });
+
+                legend.push(`${company.company_name}-占营业成本比`);
+            });
+
+            const option = {
+                title: {
+                    text: '存货占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.inventoryRatio.setOption(option, true);
+        }
+
+        // 更新应付账款分析图表
+        function updateAccountsPayableAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const accountsPayable = company.balance_sheet.metrics['应付账款及应付票据'];
+
+                series.push({
+                    name: `${company.company_name}-应付账款及应付票据`,
+                    type: 'bar',
+                    data: accountsPayable
+                });
+
+                legend.push(`${company.company_name}-应付账款及应付票据`);
+            });
+
+            const option = {
+                title: {
+                    text: '应付账款分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.accountsPayableAmount.setOption(option, true);
+        }
+
+        function updateAccountsPayableRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const payableRatio = company.balance_sheet.metrics['应付账款及应付票据占比'];
+
+                series.push({
+                    name: `${company.company_name}-占营业成本比`,
+                    type: 'line',
+                    data: payableRatio
+                });
+
+                legend.push(`${company.company_name}-占营业成本比`);
+            });
+
+            const option = {
+                title: {
+                    text: '应付账款占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.accountsPayableRatio.setOption(option, true);
+        }
+
+        // 更新合同负债分析图表
+        function updateContractLiabilityAmountChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const contractLiability = company.balance_sheet.metrics['合同负债'];
+
+                series.push({
+                    name: `${company.company_name}-合同负债`,
+                    type: 'bar',
+                    data: contractLiability
+                });
+
+                legend.push(`${company.company_name}-合同负债`);
+            });
+
+            const option = {
+                title: {
+                    text: '合同负债分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）',
+                    axisLabel: {
+                        formatter: value => (value / 100000000).toFixed(2) + '亿'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.contractLiabilityAmount.setOption(option, true);
+        }
+
+        function updateContractLiabilityRatioChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const liabilityRatio = company.balance_sheet.metrics['合同负债占比'];
+
+                series.push({
+                    name: `${company.company_name}-占营业收入比`,
+                    type: 'line',
+                    data: liabilityRatio
+                });
+
+                legend.push(`${company.company_name}-占营业收入比`);
+            });
+
+            const option = {
+                title: {
+                    text: '合同负债占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.contractLiabilityRatio.setOption(option, true);
+        }
+
+        // 添加应付账款占营业成本与存货比的图表更新函数
+        function updatePayablesAnalysisChart() {
+            const series = [];
+            const legend = [];
+
+            selectedCompanies.forEach(code => {
+                const company = financialData.companies[code];
+                const ratio = company.balance_sheet.metrics['应付账款占营业成本与存货比'];
+
+                series.push({
+                    name: `${company.company_name}-应付账款占营业成本及存货比`,
+                    type: 'line',
+                    data: ratio
+                });
+
+                legend.push(`${company.company_name}-应付账款占营业成本及存货比`);
+            });
+
+            const option = {
+                title: {
+                    text: '应付账款占比分析'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: legend,
+                    type: 'scroll'
+                },
+                grid: {
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: selectedCompanies.size > 0 ? 
+                          financialData.companies[Array.from(selectedCompanies)[0]].balance_sheet.years : [],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '占比（%）',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        show: true
+                    }
+                },
+                series: series
+            };
+
+            charts.payablesAnalysis.setOption(option, true);
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html> 
