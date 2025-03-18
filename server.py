@@ -34,25 +34,12 @@ def serve_data(filename):
     return send_from_directory(DATA_DIR, filename)
 
 if __name__ == "__main__":
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)  # 设置日志级别为 ERROR，减少输出
+    # 获取端口号，优先使用环境变量中的端口
+    port = int(os.environ.get('PORT', 5000))
     
-    start_port = 5002
-    max_tries = 10
-    port = find_available_port(start_port, max_tries)
+    # 设置日志级别
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
     
     print(f"服务器启动中...")
-    print(f"请访问：http://localhost:{port}")
-    try:
-        app.run(port=port, debug=False)  # 关闭 debug 模式
-        print("服务器已启动")
-    except OSError as e:
-        if "Address already in use" in str(e):
-            print(f"端口 {port} 已被占用，正在尝试其他端口...")
-            port = find_available_port(port + 1, max_tries)
-            print(f"找到可用端口：{port}")
-            print(f"请访问：http://localhost:{port}")
-            app.run(port=port, debug=False)
-            print("服务器已启动")
-        else:
-            raise e 
+    app.run(host='0.0.0.0', port=port) 
